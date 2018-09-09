@@ -1,74 +1,55 @@
 #define	_CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <stdio.h>
-#include <string.h>
 #include <string>
+#include <sstream>
+#include <fstream>
+#include <vector>
+#include <array>
 
 
 
 
-int rmvWhiteSpace(char ** str) {
-	int preceding = 0;
+int format(const char * filename, std::vector<std::array<float, 4>> feature, std::vector<std::string> flowertype) {
 
-	for (int i = 0; i < (int)strlen(*str); i++) {
-		if ((*str)[i] != ' ' && (*str)[i] != '\n') { break; }
-		preceding++;
-	}
+	std::string line;
+	std::string substr;
 
-	for (int i = strlen(*str) - 1; i > 0; i++) {
-		if ((*str)[i] != ' ' && (*str)[i] != '\n') { break; }
-		(*str)[i] = '\0';
-	}
-	*str = &(*str)[preceding];
-	return 0;
-}
+	std::ifstream infile(filename);
+	
+	// Iterate over file line by line
+	while (std::getline(infile, line)) {
 
+		std::istringstream iss(line);
 
-int format(const char * filename, float feature[][4], char type[][20]) {
-	//int format(const char * filename, float ** feature, char ** type) {
-
-	FILE* file = fopen(filename, "r");
-
-	char line[256];
-	char s[2] = ",";
-	char * token;
-	int i = 0;
-
-	while (fgets(line, 256, file)) //iterates through each line.
-	{
-		token = strtok(line, s);
-		feature[i][0] = std::stof(token, 0);
-
-		for (int j = 1; j< 5; j++)//gets 5 items from each line.
-		{
-			token = strtok(NULL, s);
-
-			if (j < 4)
-			{
-				feature[i][j] = std::stof(token);
-			}
-			else {
-				char ** tknptr = &token;
-				rmvWhiteSpace(tknptr);
-				strcpy(type[i], *tknptr);
-			}
+		// First 4 values in each line of csv are floats
+		std::array<float, 4> tmpArray;
+		for (int i = 0; i < 4; i++) {
+			std::getline(iss, substr, ',');		// Get desired subportion of string
+			tmpArray[i] = stof(substr);			// Convert string to float
 		}
-		i++;
+		feature.push_back(tmpArray);
+
+		// Last (5th) value in line of csv is a string
+		std::getline(iss, substr);
+		flowertype.push_back(substr);
 	}
 
-	fclose(file);
+	infile.close();
 
 	return 0;
 }
+
 
 
 
 int main()
 {
-	float feature[100][4];
-	char type[100][20];
+	std::vector<std::array<float, 4>> feature;
+	std::vector<std::string> flowertype;
 
-	format("iris.data.txt", feature, type);
+	// Move training data from csv to array.
+	format("iris.data.txt", feature, flowertype);
 
 	// Format test data here
 
